@@ -314,30 +314,22 @@
 
     // 监听urlchange事件定义
     function initUrlChange() {
-        let isLoad = false
-        const load = () => {
-            if (isLoad) return
-            isLoad = true
-            const oldPushState = history.pushState
-            const oldReplaceState = history.replaceState
+        const oldPushState = history.pushState
+        const oldReplaceState = history.replaceState
 
-            history.pushState = function pushState(...args) {
-                const res = oldPushState.apply(this, args)
-                window.dispatchEvent(new Event('urlchange'))
-                return res
-            }
-
-            history.replaceState = function replaceState(...args) {
-                const res = oldReplaceState.apply(this, args)
-                window.dispatchEvent(new Event('urlchange'))
-                return res
-            }
-
-            window.addEventListener('popstate', () => {
-                window.dispatchEvent(new Event('urlchange'))
-            })
+        history.pushState = (...args) => {
+            oldPushState.apply(history, args)
+            window.dispatchEvent(new Event('urlchange'))
         }
-        return load
+
+        history.replaceState = (...args) => {
+            oldReplaceState.apply(history, args)
+            window.dispatchEvent(new Event('urlchange'))
+        }
+
+        window.addEventListener('popstate', () => {
+            window.dispatchEvent(new Event('urlchange'))
+        })
     }
 
 
