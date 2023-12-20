@@ -813,7 +813,7 @@
 
         if (isAddEvent) {
             window.addEventListener("urlchange", () => {
-                clearAndStart(1000, false)
+                clearAndStart(100, false)
             })
         }
     }
@@ -905,7 +905,7 @@
     }
 
     // 定时启动函数程序
-    clearAndStart(1000, true)
+    clearAndStart(100, true)
     GM_addStyle(`
         .versioncontent {
             white-space: pre-wrap;
