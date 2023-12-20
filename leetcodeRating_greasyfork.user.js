@@ -154,34 +154,38 @@
 
     let version = "2.1.3-lite"
 
-    let pageList = [
-        {
-            name: 'all',
-            urlList: ['https://leetcode.cn/problemset/.*'],
-            handler: getData
-        },
-        {
-            name: 'tag',
-            urlList: ['https://leetcode.cn/tag/.*'],
-            handler: getTagData
-        },
-        {
-            name: 'pb',
-            urlList: ['https://leetcode.cn/problems/[^/]*/$', 'https://leetcode.cn/problems/[^/]*/description/$'],
-            handler: getpb
-        },
-        {
-            name: 'pblist',
-            urlList: ['https://leetcode.cn/problem-list/.*'],
-            handler: getPblistData
-        },
-        {
-            name: 'search',
-            urlList: ['https://leetcode.cn/search/.*'],
-            handler: getSearch
-        },
+    let allPage = {
+        switchName: 'switchpbRepo',
+        name: 'all',
+        urlList: ['https://leetcode.cn/problemset/.*'],
+        handler: getData
+    }
+    let tagPage = {
+        switchName: 'switchtag',
+        name: 'tag',
+        urlList: ['https://leetcode.cn/tag/.*'],
+        handler: getTagData
+    }
+    let pbPage = {
+        switchName: 'switchpb',
+        name: 'pb',
+        urlList: ['https://leetcode.cn/problems/[^/]*/$', 'https://leetcode.cn/problems/[^/]*/description/$'],
+        handler: getpb
+    }
+    let pblistPage = {
+        switchName: 'switchpblist',
+        name: 'pblist',
+        urlList: ['https://leetcode.cn/problem-list/.*'],
+        handler: getPblistData
+    }
+    let searchPage = {
+        switchName: 'switchsearch',
+        name: 'search',
+        urlList: ['https://leetcode.cn/search/.*'],
+        handler: getSearch
+    }
 
-    ]
+    const pageList = [allPage, tagPage, pbPage, pblistPage, searchPage]
 
     // req相关url
     const chContestUrl = "https://leetcode.cn/contest/"
@@ -244,11 +248,8 @@
     initUrlChange()
 
 
-    // 常量数据
-    const regDiss = '.*//leetcode.cn/problems/.*/discussion/.*'
-    const regSovle = '.*//leetcode.cn/problems/.*/solutions/.*'
-    const regPbSubmission = '.*//leetcode.cn/problems/.*/submissions/.*';
-// css 渲染
+
+    // css 渲染
     $(document.body).append(`<link href="https://cdn.bootcdn.net/ajax/libs/layer/3.1.1/theme/default/layer.min.css" rel="stylesheet">`)
 
     // 监听urlchange事件定义
@@ -283,8 +284,6 @@
         let menu_ALL = [
             ['switchpbRepo', 'pbRepo function', '题库页周赛难度评分(不包括灵茶)', true, false],
             ['switchpb', 'pb function', '题目页周赛难度评分', true, true],
-            ['switchcode', 'switchcode function', '题目页代码输入阻止联想', false, true],
-            ['switchpbside', 'switchpbside function', '题目页侧边栏分数显示', true, true],
             ['switchsearch', 'search function', '题目搜索页周赛难度评分', true, false],
             ['switchtag', 'tag function', 'tag题单页周赛难度评分(动态规划等分类题库)', true, false],
             ['switchpblist', 'pbList function', 'pbList题单页评分', true, false],
@@ -386,18 +385,19 @@
     }
 
     let tFirst, tLast  // all
-    function getData() {
-        let switchpbRepo = GM_getValue("switchpbRepo")
+    function getData(intervalId) {
+        console.log("invoke getData")
+        let switchpbRepo = GM_getValue(allPage.switchName)
         let arrList = document.querySelectorAll("div[role='rowgroup']")
         let arr = arrList[0]
         for (let ele of arrList) {
-            if (ele.childNodes.length != 0) {
+            if (ele.childNodes.length !== 0) {
                 arr = ele
                 break
             }
         }
         // pb页面加载时直接返回
-        if (arr == undefined) {
+        if (arr === undefined) {
             return
         }
         // 判断已失效，暂时注释，等待后续调整
@@ -466,19 +466,22 @@
             tLast = lastchild.textContent
             console.log("has refreshed problemlist...")
         }
+
+        if(intervalId) {
+            clearInterval(intervalId)
+        }
     }
 
     let tagt, tagf;
-    function getTagData() {
-        console.log('getTagData triggered')
-        if (!GM_getValue("switchtag")) return;
+    function getTagData(intervalId) {
+        console.log('invoke getTagData')
         // 筛选更新
         let arr = document.querySelector(".ant-table-tbody")
         let head = document.querySelector(".ant-table-cell")
-        if(head == undefined) return
+        if(head === null) return
         head = head.parentNode
-        if (tagt && arr.lastChild && tagt == arr.lastChild.textContent
-            && tagf && arr.firstChild && tagf == arr.firstChild.textContent) {
+        if (tagt && arr.lastChild && tagt === arr.lastChild.textContent
+            && tagf && arr.firstChild && tagf === arr.firstChild.textContent) {
             return
         }
         let rateRefresh = false
@@ -514,12 +517,15 @@
         if(arr.lastChild) tagt = arr.lastChild.textContent
         if(arr.firstChild) tagf = arr.firstChild.textContent
         console.log("has refreshed...")
+
+        if(intervalId) {
+            clearInterval(intervalId)
+        }
     }
 
     let pblistt, pblistf;
-    function getPblistData() {
-        console.log('getpblistdata triggered')
-        if (!GM_getValue("switchpblist")) return;
+    function getPblistData(intervalId) {
+        console.log('invoke getPblistData')
         let arrList = document.querySelectorAll("div[role='rowgroup']")
         let arr = arrList[0]
         for (let ele of arrList) {
@@ -567,11 +573,14 @@
         if(arr.lastChild) pblistt = arr.lastChild.textContent
         if(arr.firstChild) pblistf = arr.firstChild.textContent
         console.log("has refreshed...")
+
+        if(intervalId) {
+            clearInterval(intervalId)
+        }
     }
 
-    function getSearch() {
-        console.log('getsearch triggered')
-        if (!GM_getValue("switchsearch")) return
+    function getSearch(intervalId) {
+        console.log('invoke getSearch')
         let arr = $("div[role='table']")
         if (arr.length == 0) return
         arr = arr[0].childNodes[1]
@@ -608,6 +617,10 @@
                 v.childNodes[headndidx].childNodes[0].innerHTML = nd2ch[clr]
             }
         }
+
+        if(intervalId) {
+            clearInterval(intervalId)
+        }
     }
 
     // var lang, statusQus
@@ -620,18 +633,9 @@
         // console.log(key)
     }
 
-    function getpb() {
-        console.log("get pb triggered")
-        if(!GM_getValue("switchpb")) return
+    function getpb(intervalId) {
+        console.log("invoke getpb")
         let switchrealoj = GM_getValue("switchrealoj")
-
-        // 题目页面
-        let curUrl = location.href
-        let isDescript = !curUrl.match(regDiss) && !curUrl.match(regSovle) && !curUrl.match(regPbSubmission)
-        // 不在题目描述页面
-        if (!isDescript) {
-            return
-        }
         if (isDynamic) {
             // 流动布局逻辑
             let t = document.querySelector(".text-title-large")
@@ -641,17 +645,6 @@
 
             let data = t.textContent.split(".")
             let id = data[0].trim()
-            if (GM_getValue("switchcode")) {
-                waitForKeyElements(".overflowingContentWidgets", () => {
-                    $('.overflowingContentWidgets').remove()
-                });
-                let div = document.querySelector('div.h-full.w-full')
-                div.onkeydown = function (event) {
-                    if (event.keyCode >= 65 && event.keyCode <= 90 || event.keyCode == 13) {
-                        eventhappend()
-                    }
-                }
-            }
             let colorA = ['.text-difficulty-hard', '.text-difficulty-easy', '.text-difficulty-medium']
             let colorSpan;
             for (const color of colorA) {
@@ -799,17 +792,6 @@
                 return
             }
             let pa = colorSpan.parentNode
-            if (GM_getValue("switchcode")) {
-                waitForKeyElements(".overflowingContentWidgets", () => {
-                    $('.overflowingContentWidgets').remove()
-                });
-                let div = document.querySelector('div.h-full.w-full')
-                div.onkeydown = function (event) {
-                    if (event.keyCode >= 65 && event.keyCode <= 90 || event.keyCode == 13) {
-                        eventhappend()
-                    }
-                }
-            }
 
             // 新版统计难度分数并且修改
             let nd = colorSpan.getAttribute("class")
@@ -913,11 +895,8 @@
             }
         }
 
-        // 显示完成之后, 删除handler
-        let id = GM_getValue("pb")
-        if(id) {
-            clearInterval(id)
-            GM_deleteValue(id)
+        if(intervalId) {
+            clearInterval(intervalId)
         }
 
     }
@@ -933,8 +912,10 @@
             }
             let urlNoParam = location.origin + location.pathname
             for (let reg of page.urlList) {
-                if (urlNoParam.match(reg)) {
-                    let intervalId = setInterval(page.handler, timeout)
+                if (urlNoParam.match(reg) && GM_getValue(page.switchName)) {
+                    let intervalId = setInterval(() => {
+                        page.handler(intervalId)
+                    }, timeout)
                     GM_setValue(page.name, intervalId)
                     break
                 }
