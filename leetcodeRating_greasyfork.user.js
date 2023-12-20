@@ -172,12 +172,6 @@
         urlList: ['https://leetcode.cn/problems/[^/]*/$', 'https://leetcode.cn/problems/[^/]*/description/$'],
         handler: getpb
     }
-    let pblistPage = {
-        switchName: 'switchpblist',
-        name: 'pblist',
-        urlList: ['https://leetcode.cn/problem-list/.*'],
-        handler: getPblistData
-    }
     let searchPage = {
         switchName: 'switchsearch',
         name: 'search',
@@ -185,7 +179,7 @@
         handler: getSearch
     }
 
-    const pageList = [allPage, tagPage, pbPage, pblistPage, searchPage]
+    const pageList = [allPage, tagPage, pbPage, searchPage]
 
     // req相关url
     const chContestUrl = "https://leetcode.cn/contest/"
@@ -201,46 +195,6 @@
     // 是否使用动态布局
     let localVal = localStorage.getItem("used-dynamic-layout")
     let isDynamic = localVal !== undefined ? localVal.includes("true") : false
-
-    // 同步函数
-    function waitForKeyElements (selectorTxt, actionFunction, bWaitOnce, iframeSelector) {
-        let targetNodes, btargetsFound;
-        if (typeof iframeSelector == "undefined")
-            targetNodes = $(selectorTxt);
-        else
-            targetNodes = $(iframeSelector).contents().find (selectorTxt);
-
-        if (targetNodes  &&  targetNodes.length > 0) {
-            btargetsFound   = true;
-            targetNodes.each (function(){
-                let jThis           = $(this);
-                let alreadyFound = jThis.data ('alreadyFound')  ||  false;
-                if (!alreadyFound) {
-                    let cancelFound = actionFunction (jThis);
-                    if (cancelFound) btargetsFound = false;
-                    else jThis.data ('alreadyFound', true);
-                }
-            });
-        } else {
-            btargetsFound = false;
-        }
-        let controlObj      = waitForKeyElements.controlObj  ||  {};
-        let controlKey      = selectorTxt.replace (/[^\w]/g, "_");
-        let timeControl     = controlObj [controlKey];
-        if (btargetsFound  &&  bWaitOnce  &&  timeControl) {
-            clearInterval (timeControl);
-            delete controlObj [controlKey]
-        }
-        else {
-            if (!timeControl) {
-                timeControl = setInterval (function() {
-                        waitForKeyElements(selectorTxt,actionFunction,bWaitOnce,iframeSelector);
-                    },300);
-                controlObj[controlKey] = timeControl;
-            }
-        }
-        waitForKeyElements.controlObj = controlObj;
-    }
 
     // 刷新菜单
     Script_setting()
@@ -523,62 +477,6 @@
         }
     }
 
-    let pblistt, pblistf;
-    function getPblistData(intervalId) {
-        console.log('invoke getPblistData')
-        let arrList = document.querySelectorAll("div[role='rowgroup']")
-        let arr = arrList[0]
-        for (let ele of arrList) {
-            if (ele.childNodes.length != 0) {
-                arr = ele 
-                break
-            }
-        }
-        if (arr == undefined) return
-        if (pblistt != undefined && arr.lastChild && pblistt == arr.lastChild.textContent
-            && arr.firstChild && pblistf == arr.firstChild.textContent) {
-            return
-        }
-        let head = document.querySelector("div[role='row']")
-        // 确认难度序列
-        let rateRefresh = false
-        let headndidx;
-        for (let i = 0; i < head.childNodes.length; i++) {
-            let headEle = head.childNodes[i]
-            if (headEle.textContent.includes("难度")) {
-                headndidx = i
-            }
-            if (headEle.textContent.includes("题目评分")){
-                rateRefresh = true
-            }
-
-        }
-        let childs = arr.childNodes
-        for (const element of childs) {
-            let v = element
-            if (!v.childNodes[1]) return
-            let t = v.childNodes[1].textContent
-            let data = t.split(".")
-            let id = data[0].trim()
-            let nd = v.childNodes[headndidx].textContent
-            if (t2rate[id] != undefined && !rateRefresh) {
-                nd = t2rate[id]["Rating"]
-                v.childNodes[headndidx].childNodes[0].innerHTML = nd
-            } else {
-                let nd2ch = { "text-olive dark:text-dark-olive": "简单", "text-yellow dark:text-dark-yellow": "中等", "text-pink dark:text-dark-pink": "困难" }
-                let cls = v.childNodes[headndidx].childNodes[0].getAttribute("class")
-                v.childNodes[headndidx].childNodes[0].innerHTML = nd2ch[cls]
-            }
-        }
-        if(arr.lastChild) pblistt = arr.lastChild.textContent
-        if(arr.firstChild) pblistf = arr.firstChild.textContent
-        console.log("has refreshed...")
-
-        if(intervalId) {
-            clearInterval(intervalId)
-        }
-    }
-
     function getSearch(intervalId) {
         console.log('invoke getSearch')
         let arr = $("div[role='table']")
@@ -621,16 +519,6 @@
         if(intervalId) {
             clearInterval(intervalId)
         }
-    }
-
-    // var lang, statusQus
-    let eventhappend = function() {
-        let key = document.querySelector('.inputarea')
-        key.setAttribute('aria-autocomplete','both')
-        key.setAttribute('aria-haspopup',false)
-        key.removeAttribute('data-focus-visible-added')
-        key.removeAttribute('aria-activedescendant')
-        // console.log(key)
     }
 
     function getpb(intervalId) {
